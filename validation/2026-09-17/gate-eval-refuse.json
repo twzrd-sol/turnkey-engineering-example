@@ -1,0 +1,19 @@
+{
+  "schema": "twzrd.gate_eval_refuse.v1",
+  "lineage": "self_serve_handoff_command",
+  "closes_external_adoption_metric": false,
+  "note": "Buyer refuse transcript. day0.gate_evals is settle-gate only \u2014 not this path.",
+  "target_url": "https://intel.twzrd.xyz/v1/intel/refuse-fixture",
+  "pay_to": "CnTmHDXVEafkc8sFSzNky9w5zwk63Bk2mHZZodorjhvR",
+  "twzrd_decision": "block",
+  "twzrd_reason": "[twzrd] twzrd_decision_block payTo=CnTmHDXVEafkc8sFSzNky9w5zwk63Bk2mHZZodorjhvR network=solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  "signer_invocation_count": 0,
+  "payment_retry_count": 0,
+  "usdc_spent": 0,
+  "preflight_immediately_before_run": {
+    "decision": "block",
+    "can_spend": false
+  },
+  "observed_error": "Failed to create payment payload: Payment creation aborted: [twzrd] twzrd_decision_block payTo=CnTmHDXVEafkc8sFSzNky9w5zwk63Bk2mHZZodorjhvR network=solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  "verified": true
+}

@@ -12,7 +12,7 @@
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-import { createMemorySpendLedger, createSeededDecisionSigner, evaluateIntent } from "twzrd-x402-gate";
+import { buildBlockedNeverSignedAttestation, createMemorySpendLedger, createSeededDecisionSigner, evaluateIntent, verifyOutcomeAttestationSignature, type PaymentDecision } from "twzrd-x402-gate";
 
 import { createMockTurnkeyApprover } from "../src/approver.js";
 import { SOLANA_MAINNET_CAIP2, type EvaluatePaymentFn } from "../src/decide.js";
@@ -38,12 +38,25 @@ const intelligence = createSellerIntelligence({ mode: "live", runId: `demo-${Dat
 const policy = { maxAmountUsd: CLI_DEFAULT_CAP_USD, refuseWashFlagged: true };
 
 /** Same evaluator wiring as src/cli.ts runWorker. */
+let lastToken: PaymentDecision | undefined;
 const evaluate: EvaluatePaymentFn = async (intent) => {
   const r = await evaluateIntent(intent, { signer, ledger: createMemorySpendLedger(), policy, intelligence });
+  lastToken = r;
   return { decision: r.decision, reasonCodes: r.reasonCodes };
 };
 
-type Case = { id: string; kind: "live_intelligence" | "deterministic_local"; what: string; vote: string; reasonCodes: string[]; intelligence?: SellerIntelObservation; note: string };
+/** base58 of the raw 32-byte Ed25519 key inside an SPKI PEM; derived here, not read from the attestation. */
+function pubkeyB58FromPem(pem: string): string {
+  const der = Buffer.from(pem.replace(/-----[A-Z ]+-----|\s/g, ""), "base64");
+  const raw = der.subarray(der.length - 32);
+  const A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  let n = BigInt("0x" + raw.toString("hex")), out = "";
+  while (n > 0n) { out = A[Number(n % 58n)] + out; n /= 58n; }
+  for (const b of raw) { if (b !== 0) break; out = "1" + out; }
+  return out;
+}
+
+type Case = { id: string; kind: "live_intelligence" | "deterministic_local" | "offline_attestation"; what: string; vote: string; reasonCodes: string[]; intelligence?: SellerIntelObservation; note: string };
 const cases: Case[] = [];
 
 async function intentCase(id: string, what: string, amount: string, note: string): Promise<void> {
@@ -65,8 +78,23 @@ async function activityCase(id: string, what: string, fixture: string, signWith:
 
 await intentCase("A", `${allowAmount} USDC to an allow-graded seller`, allowAmount, "Live free preflight + wash check; approve only on an explicit allow under the card's recommended cap.");
 await intentCase("D", `${overCapAmount} USDC to the same seller`, overCapAmount, "Same seller, amount above the card's recommended cap: refused by live intelligence before any signature.");
+const blockToken = lastToken;
 await activityCase("B", "Real mainnet transaction bytes: 100 USDC TransferChecked, worker default 50 USD cap", "clean_usdc", "EKLwbUquEHL5LZFi7L3BmNybpBRF5kCPmbJHmXYkvshK", "Whole-transaction decode then local policy; the cap refuses before intelligence is consulted (no network dependence).");
 await activityCase("C", "Real mainnet transaction bytes: native SOL system transfer", "system_sol", "GoSBxCH19sMnZVEifsXeeMdEfkTv6Zh6MWvQFQF3e5m7", "A System Program transfer is not a supported payment instruction for this seat; anything the decoder cannot account for fails closed.");
+
+// E: positive control for the verifier. The block from case D is turned into an
+// operator-signed "blocked_never_signed" attestation bound to that exact intent,
+// then verified offline against the signer's public key derived from its PEM.
+// A tampered leaf must fail. No network.
+{
+  if (!blockToken || blockToken.decision !== "block") throw new Error("case D did not produce a block token");
+  const attestation = await buildBlockedNeverSignedAttestation(blockToken, { counterparty: allowSeller!, signer, preflightId: cases.find((c) => c.id === "D")?.intelligence?.preflightId ?? null });
+  const expected = pubkeyB58FromPem(signer.publicKeyPem);
+  const genuine = verifyOutcomeAttestationSignature(attestation, expected);
+  const tampered = verifyOutcomeAttestationSignature({ leaf: attestation.leaf.replace(/[0-9a-f]$/, (c) => (c === "0" ? "1" : "0")), signature: attestation.signature }, expected);
+  if (!genuine || tampered) throw new Error(`attestation verification failed: genuine=${genuine} tampered=${tampered}`);
+  cases.push({ id: "E", kind: "offline_attestation", what: "Sign a blocked_never_signed attestation for case D's refused intent and verify it offline", vote: "n/a", reasonCodes: [`genuine_verifies=${genuine}`, `tampered_leaf_verifies=${tampered}`, `bound_decision_id=${attestation.preimage.decision_id === blockToken.decisionId}`], note: `Domain ${attestation.preimage.domain}; trust anchor is the operator's published key, not the attestation's own signing_pubkey.` });
+}
 
 console.log(JSON.stringify({
   generatedAt: new Date().toISOString(),
