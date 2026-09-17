@@ -1,0 +1,119 @@
+
+> twzrd-cosigner@0.1.0 pilot-smoke
+> npm run dry-run && TWZRD_PILOT_SMOKE_OFFLINE=1 npm run setup-print
+
+
+> twzrd-cosigner@0.1.0 dry-run
+> tsx examples/worker-dry-run.ts
+
+{
+  "activityId": "dry-run-1",
+  "action": "APPROVE_ACTIVITY",
+  "verdict": "allow",
+  "reasonCodes": [
+    "DRY_RUN_ALLOW"
+  ],
+  "stamp": {
+    "ok": true,
+    "dryRun": true,
+    "detail": "mock APPROVE_ACTIVITY fingerprint=fp-dry-run-1"
+  },
+  "mockStamps": [
+    {
+      "at": 1789677842861,
+      "action": "APPROVE_ACTIVITY",
+      "fingerprint": "fp-dry-run-1",
+      "activityId": "dry-run-1"
+    }
+  ],
+  "note": "dry-run only - no Turnkey API. Live path uses createTurnkeyApprover."
+}
+
+> twzrd-cosigner@0.1.0 setup-print
+> tsx examples/setup-turnkey-print.ts
+
+
+*** OFFLINE PILOT-SMOKE -- PLACEHOLDER KEYS, NOT A REAL TOPOLOGY PROOF ***
+Substituted dummy P-256 public keys because these were not set: TURNKEY_PAYER_API_PUBLIC_KEY, TWZRD_APPROVER_PUBLIC_KEY, TURNKEY_RECOVERY_API_PUBLIC_KEY.
+This only proves the script runs end-to-end offline (CI parity). It does NOT
+prove the real enrollment topology -- re-run with real values for that.
+
+# TWZRD cosigner - Turnkey enrollment request
+
+This creates a fresh child organization. Its three root users are customer hot
+(payer), TWZRD veto (twzrd-guard), and customer recovery (payer-recovery).
+rootQuorumThreshold=2: normal spend is hot + TWZRD; break-glass is hot +
+recovery; TWZRD cannot move funds alone. A policy on an existing root signer
+is not equivalent and is intentionally not emitted.
+
+The recovery private key must never be available to the agent runtime (paper,
+HSM, or a person's safe). Do not commit any private key.
+
+Request body for createSubOrganization:
+
+{
+  "organizationId": "<PARENT_ORGANIZATION_ID>",
+  "subOrganizationName": "TWZRD guarded payer",
+  "rootUsers": [
+    {
+      "userName": "payer",
+      "apiKeys": [
+        {
+          "apiKeyName": "payer-key",
+          "publicKey": "02aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "curveType": "API_KEY_CURVE_P256"
+        }
+      ],
+      "authenticators": [],
+      "oauthProviders": []
+    },
+    {
+      "userName": "twzrd-guard",
+      "apiKeys": [
+        {
+          "apiKeyName": "twzrd-guard-key",
+          "publicKey": "03bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "curveType": "API_KEY_CURVE_P256"
+        }
+      ],
+      "authenticators": [],
+      "oauthProviders": []
+    },
+    {
+      "userName": "payer-recovery",
+      "apiKeys": [
+        {
+          "apiKeyName": "payer-recovery-key",
+          "publicKey": "02cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "curveType": "API_KEY_CURVE_P256"
+        }
+      ],
+      "authenticators": [],
+      "oauthProviders": []
+    }
+  ],
+  "rootQuorumThreshold": 2,
+  "wallet": {
+    "walletName": "TWZRD guarded Solana wallet",
+    "accounts": [
+      {
+        "curve": "CURVE_ED25519",
+        "pathFormat": "PATH_FORMAT_BIP32",
+        "path": "m/44'/501'/0'/0'",
+        "addressFormat": "ADDRESS_FORMAT_SOLANA"
+      }
+    ]
+  },
+  "disableEmailRecovery": true,
+  "disableEmailAuth": true,
+  "disableSmsAuth": true,
+  "disableOtpEmailAuth": true
+}
+
+Dry-run:
+  npm run dry-run
+
+Live mutation requires the explicit TWZRD_ENABLE_TURNKEY_SETUP=1 CLI gate.
+
+
+Exit code: 0

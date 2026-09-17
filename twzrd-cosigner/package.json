@@ -1,0 +1,56 @@
+{
+  "name": "twzrd-cosigner",
+  "version": "0.1.0",
+  "description": "TWZRD as a required payer-side co-signer. An opt-in approver worker: a wallet vendor's pending sign request (Turnkey first) comes in as an unsigned Solana transaction, TWZRD decodes the payment-shaped transfers, evaluates them against the rail-agnostic policy runtime + counterparty intel, and returns ALLOW/DENY with reason codes. A DENY means the payer's wallet never signs. Enforcing, permissionless (payer configures their own wallet quorum), no custody move, no on-chain deploy. Reuses twzrd-x402-gate's PaymentIntent + policy-runtime + DecisionToken as the decision brain. This is NOT _cosign_fee_payer (that is TWZRD-as-facilitator-fee-payer on an already-signed sponsored settle); this is TWZRD-as-payer-policy-co-signer before the payer signs.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "twzrd-cosigner": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "license": "MIT",
+  "homepage": "https://intel.twzrd.xyz",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
+    "test": "npm run build && tsx test/decode.test.ts && tsx test/decode-fuzz.test.ts && tsx test/decide.test.ts && tsx test/turnkey.test.ts && tsx test/resolve-owner.test.ts && tsx test/setup-turnkey.test.ts && tsx test/turnkey-approver.test.ts && tsx test/worker.test.ts && tsx test/polling-worker.test.ts && tsx test/cli.test.ts && tsx test/cli-entrypoint.test.ts && tsx test/mandate.test.ts && tsx test/mandate-store.test.ts && tsx test/mandate-server.test.ts && tsx test/receipt.test.ts",
+    "dry-run": "tsx examples/worker-dry-run.ts",
+    "setup-print": "tsx examples/setup-turnkey-print.ts",
+    "pilot-smoke": "npm run dry-run && TWZRD_PILOT_SMOKE_OFFLINE=1 npm run setup-print",
+    "prepack": "tsc",
+    "prepublishOnly": "tsc"
+  },
+  "keywords": [
+    "twzrd",
+    "solana",
+    "co-signer",
+    "turnkey",
+    "payment-policy",
+    "agent-payments"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@turnkey/sdk-server": "6.1.1",
+    "twzrd-x402-gate": "0.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}

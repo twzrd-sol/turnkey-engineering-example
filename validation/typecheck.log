@@ -1,0 +1,6 @@
+
+> twzrd-cosigner@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.check.json
+
+
+Exit code: 0

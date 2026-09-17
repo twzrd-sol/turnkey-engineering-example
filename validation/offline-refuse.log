@@ -1,0 +1,28 @@
+
+> twzrd-cosigner@0.1.0 dry-run
+> tsx examples/worker-dry-run.ts --block
+
+{
+  "activityId": "dry-run-1",
+  "action": "REJECT_ACTIVITY",
+  "verdict": "deny",
+  "reasonCodes": [
+    "DRY_RUN_BLOCK"
+  ],
+  "stamp": {
+    "ok": true,
+    "dryRun": true,
+    "detail": "mock REJECT_ACTIVITY fingerprint=fp-dry-run-1"
+  },
+  "mockStamps": [
+    {
+      "at": 1789677843093,
+      "action": "REJECT_ACTIVITY",
+      "fingerprint": "fp-dry-run-1",
+      "activityId": "dry-run-1"
+    }
+  ],
+  "note": "dry-run only - no Turnkey API. Live path uses createTurnkeyApprover."
+}
+
+Exit code: 0
