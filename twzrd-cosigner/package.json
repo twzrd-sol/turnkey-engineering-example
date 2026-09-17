@@ -32,7 +32,8 @@
     "pilot-smoke": "npm run dry-run && TWZRD_PILOT_SMOKE_OFFLINE=1 npm run setup-print",
     "prepack": "tsc",
     "prepublishOnly": "tsc",
-    "live-intel-check": "tsx examples/live-seller-intel.ts"
+    "live-intel-check": "tsx examples/live-seller-intel.ts",
+    "demo": "tsx examples/demo-transcript.ts"
   },
   "keywords": [
     "twzrd",

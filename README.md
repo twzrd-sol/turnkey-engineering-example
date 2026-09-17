@@ -2,6 +2,8 @@
 
 Prepared September 17, 2026. Source snapshot: 791087e5c8ed6bdc326acaed77837757ca53c0e0.
 
+**Demo transcript:** [DEMO.md](DEMO.md) shows a live read-only ALLOW, a live over-cap refusal and two deterministic refusals from real mainnet bytes, in one command.
+
 **Revalidated September 17, 2026:** [dependency matrix, findings and limits](VALIDATION-2026-09-17.md). Later the same day the worker was wired to TWZRD seller intelligence (fail-closed) and checked read-only against the live endpoint; see the [seller-intelligence section](VALIDATION-2026-09-17.md#seller-intelligence-wired-september-17-2026-later-the-same-day).
 
 ## What we would like to explore
