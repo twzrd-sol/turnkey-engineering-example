@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "js-sha3": "0.9.3",
     "tsx": "^4.7.0",
     "typescript": "^5.4.0"
   }

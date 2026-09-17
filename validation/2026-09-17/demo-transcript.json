@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-09-17T21:53:19.784Z",
+  "intelligence": "seller intelligence LIVE via https://intel.twzrd.xyz (fail-closed; unknown sellers refused)",
+  "approver": "mock (records the vote the guard seat would cast); live path uses createTurnkeyApprover against the payer's 2-of-3 organization",
+  "policy": {
+    "maxAmountUsd": "50",
+    "refuseWashFlagged": true
+  },
+  "cases": [
+    {
+      "id": "A",
+      "kind": "live_intelligence",
+      "what": "0.10 USDC to an allow-graded seller",
+      "vote": "APPROVE_ACTIVITY",
+      "reasonCodes": [
+        "ALLOW"
+      ],
+      "intelligence": {
+        "decisionId": "64dcd4a0-f3e4-480e-bfe2-bb162e121105",
+        "payTo": "J7ZvJEspvwP1oRxQZ7mYmNmT22NTm3GWq3t7HEbvPZYx",
+        "amountUsd": "0.10",
+        "approved": true,
+        "verdict": "allow",
+        "score": 64.2,
+        "washFlagged": null,
+        "reason": "twzrd_allow",
+        "preflightId": 656842
+      },
+      "note": "Live free preflight + wash check; approve only on an explicit allow under the card's recommended cap."
+    },
+    {
+      "id": "D",
+      "kind": "live_intelligence",
+      "what": "20 USDC to the same seller",
+      "vote": "REJECT_ACTIVITY",
+      "reasonCodes": [
+        "INTEL_BLOCK"
+      ],
+      "intelligence": {
+        "decisionId": "bfbc931e-cbf1-4ea2-9913-ce4c6b07bfe8",
+        "payTo": "J7ZvJEspvwP1oRxQZ7mYmNmT22NTm3GWq3t7HEbvPZYx",
+        "amountUsd": "20",
+        "approved": false,
+        "verdict": "block",
+        "score": 64.2,
+        "reason": "twzrd_over_recommended_cap_20_gt_10",
+        "preflightId": 656843
+      },
+      "note": "Same seller, amount above the card's recommended cap: refused by live intelligence before any signature."
+    },
+    {
+      "id": "B",
+      "kind": "deterministic_local",
+      "what": "Real mainnet transaction bytes: 100 USDC TransferChecked, worker default 50 USD cap",
+      "vote": "REJECT_ACTIVITY",
+      "reasonCodes": [
+        "POLICY_MAX_AMOUNT",
+        "twzrd_budget_exceeded"
+      ],
+      "note": "Whole-transaction decode then local policy; the cap refuses before intelligence is consulted (no network dependence)."
+    },
+    {
+      "id": "C",
+      "kind": "deterministic_local",
+      "what": "Real mainnet transaction bytes: native SOL system transfer",
+      "vote": "REJECT_ACTIVITY",
+      "reasonCodes": [
+        "TWZRD_UNACCOUNTED_INSTRUCTION"
+      ],
+      "note": "A System Program transfer is not a supported payment instruction for this seat; anything the decoder cannot account for fails closed."
+    },
+    {
+      "id": "E",
+      "kind": "offline_attestation",
+      "what": "Sign a blocked_never_signed attestation for case D's refused intent and verify it offline",
+      "vote": "n/a",
+      "reasonCodes": [
+        "genuine_verifies=true",
+        "tampered_leaf_verifies=false",
+        "bound_decision_id=true"
+      ],
+      "note": "Domain TWZRD:AO_DECISION_OUTCOME_V1; trust anchor is the operator's published key, not the attestation's own signing_pubkey."
+    }
+  ],
+  "boundaries": [
+    "read-only: no Turnkey activity, signature, broadcast or payment",
+    "the seller wallet is an observed public counterparty in TWZRD's settlement corpus, not a customer or partner, and was not contacted",
+    "live grades and caps change; rerun before quoting",
+    "the live 2-of-3 Turnkey organization is not exercised by this transcript"
+  ]
+}
