@@ -1,0 +1,4 @@
+ok  CLI-equivalent local policy without intelligence allows under-cap payment: ALLOW
+ok  CLI default $50 cap refuses the $100 fixture: POLICY_MAX_AMOUNT,twzrd_budget_exceeded
+ok  explicitly injected wash intelligence refuses payment: WASH_FLAGGED
+ok  explicitly injected warn refuses payment: INTEL_WARN,TWZRD_POLICY_WARN_REFUSED

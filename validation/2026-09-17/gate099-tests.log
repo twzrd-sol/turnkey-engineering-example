@@ -1,0 +1,105 @@
+
+> twzrd-cosigner@0.1.0 test
+> npm run build && tsx test/decode.test.ts && tsx test/decode-fuzz.test.ts && tsx test/decide.test.ts && tsx test/turnkey.test.ts && tsx test/resolve-owner.test.ts && tsx test/setup-turnkey.test.ts && tsx test/turnkey-approver.test.ts && tsx test/worker.test.ts && tsx test/polling-worker.test.ts && tsx test/cli.test.ts && tsx test/cli-entrypoint.test.ts && tsx test/mandate.test.ts && tsx test/mandate-store.test.ts && tsx test/mandate-server.test.ts && tsx test/receipt.test.ts
+
+
+> twzrd-cosigner@0.1.0 build
+> tsc
+
+ok  decode legacy USDC transferChecked -> 516451 base units
+ok  decode v0+ALT flags unresolved, keeps amount
+ok  decode native SOL transfer -> 5374 lamports
+ok  no phantom transfers from unknown programs
+ok  every instruction categorized (benign / transfer / other)
+ok  compute budget exposes the requested priority fee
+ok  ATA instructions fail closed instead of hiding rent exposure
+
+DECODE: all assertions passed
+ok  130-key legacy tx: 2-byte shortvec + max-u64 + base58 round-trip
+ok  v0 ALT-referenced dest: unresolved + null payee, amount preserved
+ok  system SOL transfer round-trip
+ok  bare SPL transfer: null mint/decimals
+ok  130-instruction tx: 2-byte ix-count shortvec, one transfer
+ok  truncation robustness: 16 corrupt prefixes all threw or denied
+
+DECODE-FUZZ: all assertions passed
+ok  priceable USDC + allow -> allow
+ok  brain block -> deny
+ok  ALT payee -> fail-closed deny, brain not called
+ok  unpriced SOL -> fail-closed deny
+ok  priced SOL -> evaluated
+ok  missing owner resolver -> fail-closed deny
+ok  no payment -> fail-closed deny
+ok  onUndecodable=allow respected
+ok  whole-tx guard: unaccounted instruction -> deny, brain not called
+ok  bare transfer -> deny (unverifiable mint)
+ok  multi-transfer split-cap bypass fails closed
+ok  requireAllInstructionsAccounted=false respected
+ok  real clean USDC tx -> passes guard, allow
+ok  real bundled tx -> whole-tx guard deny
+ok  brain warn -> DENY (co-signer never signs on warn)
+ok  misdeclared decimals -> deny
+ok  corrupt null-destination transfer -> deny
+ok  max-u64 amount priced exactly (no Number precision loss)
+ok  excessive compute-unit price fails closed before the brain
+
+DECIDE: all assertions passed
+ok  clean allowed tx -> APPROVE_ACTIVITY(fp-abc)
+ok  blocked tx -> REJECT_ACTIVITY
+ok  bundled tx -> REJECT via whole-tx guard
+ok  undecodable unsignedTransaction -> fail-closed REJECT
+ok  non-sign activity -> ABSTAIN
+ok  guarded fee-payer-only signer -> fail-closed REJECT
+ok  unexpected Turnkey signWith -> fail-closed REJECT
+
+TURNKEY: all assertions passed
+ok  parsed token account resolves to its owner
+ok  non-token parsed account fails closed
+ok  non-token program ownership fails closed
+ok  RPC failures and malformed payloads fail closed
+ok  resolver memoizes one ATA lookup
+ok  transient resolver failure is retried
+resolve-owner.test.ts: all passed
+ok  setup creates isolated 2-of-3 hot + veto + recovery child quorum
+ok  setup rejects missing payer, guard, or recovery key before mutation
+ok  setup rejects a shared payer/guard/recovery credential
+ok  setup validates and normalizes compressed P-256 keys
+ok  setup rejects duplicate returned child root IDs
+ok  setup surfaces a pending parent-quorum activity
+setup-turnkey.test.ts: all passed
+ok  adapter lists only pending sign activities for the child org
+ok  adapter maps the one stamp port to explicit approve/reject SDK calls
+ok  failed/non-voted SDK activity is not reported as a successful vote
+turnkey-approver.test.ts: all passed
+ok  dry-run ALLOW -> mock APPROVE stamp
+ok  dry-run BLOCK -> mock REJECT stamp
+ok  dry-run WARN -> REJECT + POLICY_WARN_REFUSED
+ok  dry-run bundled tx -> REJECT via whole-tx guard
+ok  dry-run batch allow+block
+ok  dry-run missing owner -> REJECT fail-closed
+ok  mandate binds one unsigned transaction to one Turnkey activity
+worker.test.ts: all passed
+ok  polling cycle approves clean, rejects unaccounted, abstains non-sign
+ok  Turnkey vote error leaves pending without approval
+ok  accepted vote exposes transaction-bound receipt callback
+ok  brain error is fail-closed to reject
+ok  polling loop stops on abort
+ok  transient list failure is retried without worker exit
+ok  polling timer does not accumulate abort listeners
+polling-worker.test.ts: all passed
+ok  CLI accepts guard membership in an exact 2-of-3 hot/veto/cold quorum
+ok  CLI rejects threshold drift, missing recovery, or a missing TWZRD member
+cli.test.ts: all passed
+ok  direct invocation runs main()
+ok  symlinked invocation (the real npm/npx path) runs main()
+cli-entrypoint.test.ts: all passed
+ok  parse refuses incomplete or extra fields
+ok  bind refuses mismatch and expiry
+ok  matching cosign allows
+ok  requireCosign without tuple denies
+ok  amount mismatch denies before brain allow
+ok  policy id is bound, not decorative
+mandate.test.ts: all passed
+ok  durable mandate is single-use and same-activity idempotent
+ok  mandate intake authenticates, binds policy, and refuses replay
+ok  accepted vote produces one durable, verifiable receipt

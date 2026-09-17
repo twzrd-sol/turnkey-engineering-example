@@ -2,9 +2,11 @@
 
 Prepared September 17, 2026. Source snapshot: 791087e5c8ed6bdc326acaed77837757ca53c0e0.
 
+**Revalidated September 17, 2026:** [dependency matrix, findings and limits](VALIDATION-2026-09-17.md). The stock CLI enforces local payment policy; it does not currently wire seller intelligence.
+
 ## What we would like to explore
 
-TWZRD evaluates payment policy and seller settlement reputation before an agent signs a payment. The Turnkey integration adds a TWZRD approval vote to a payer-controlled Solana wallet. This is an internal implementation seeking engineering review and a small customer pilot, not an existing customer deployment. It does not verify the seller’s identity or guarantee service delivery.
+TWZRD offers payment-policy and seller-reputation components. This Turnkey example adds a TWZRD approval vote to a payer-controlled Solana wallet and wires local payment policy. Seller-reputation enforcement requires an intelligence provider that the stock CLI does not currently supply. This is an internal implementation seeking engineering review and a small customer pilot, not an existing customer deployment. It does not verify the seller’s identity or guarantee service delivery.
 
 ## Integration boundary
 
@@ -38,6 +40,7 @@ npm test
 npm run typecheck
 npm run pilot-smoke
 npm run dry-run -- --block
+# npm test also exercises the real installed policy evaluator.
 ```
 
 The dry-run injects both the decision and a mock Turnkey approver. Setup-print emits placeholder public keys and makes no API call. Neither command creates a wallet, signs, or broadcasts. Dependency installation requires registry access.
