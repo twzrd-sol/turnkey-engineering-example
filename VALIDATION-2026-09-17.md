@@ -1,6 +1,8 @@
 # Revalidation — September 17, 2026
 
-## Result
+> **Reading order.** This document was written in two passes on the same day. The sections marked **SUPERSEDED** describe the state before seller intelligence was wired and before the gate pin moved to 0.9.9; they are kept as history. Current state starts at [Seller intelligence wired](#seller-intelligence-wired-september-17-2026-later-the-same-day).
+
+## Result (SUPERSEDED in part)
 
 The example still builds and passes offline checks, including against the newer registry dependencies tested below. This is compatibility evidence, not current live Turnkey or customer-deployment proof.
 
@@ -16,11 +18,13 @@ Environment: Node.js 24.19.0. Baseline public commit: bcf2ecc. Registry versions
 | 0.9.9 (registry latest) | 6.1.1 | PASS | PASS | PASS |
 | 0.9.9 | 8.5.0 (registry latest) | PASS | PASS | PASS |
 
-Versions were installed with `npm install --ignore-scripts --no-audit --no-fund --save-exact`, then the three commands above ran for each combination. Baseline started with `npm ci --ignore-scripts --no-audit --no-fund`. Original dependency files were restored after the experiment; this repository still pins 0.9.3 / 6.1.1. No claim is made about untested intermediate combinations or Node 20.
+Versions were installed with `npm install --ignore-scripts --no-audit --no-fund --save-exact`, then the three commands above ran for each combination. Baseline started with `npm ci --ignore-scripts --no-audit --no-fund`. Original dependency files were restored after the experiment; at the time of this pass the repository still pinned 0.9.3 / 6.1.1; **superseded:** the pin is now 0.9.9 / 6.1.1, see below. No claim is made about untested intermediate combinations or Node 20.
 
 Logs: [baseline](validation/2026-09-17/baseline-tests.log), [new gate](validation/2026-09-17/gate099-tests.log), [new gate and SDK](validation/2026-09-17/gate099-turnkey850-tests.log), [new SDK smoke](validation/2026-09-17/gate099-turnkey850-smoke.log).
 
-## Important finding: seller intelligence was not wired in the CLI (fixed later the same day, see below)
+## SUPERSEDED — Important finding: seller intelligence was not wired in the CLI
+
+*Historical. Fixed later the same day; see [Seller intelligence wired](#seller-intelligence-wired-september-17-2026-later-the-same-day). The statements in this section describe commit bcf2ecc, not the current tree.*
 
 `src/cli.ts` calls `evaluateIntent(intent, { signer, ledger, policy })`. There is no `intelligence` provider in that call. Setting `refuseWashFlagged: true` is not itself a reputation lookup. The policy runtime only checks remote intelligence when that provider is supplied.
 
@@ -50,13 +54,13 @@ Only twzrd-x402-gate and @turnkey/sdk-server are runtime dependencies of this ex
 
 No compatibility claim is made for combining those separate packages with this example.
 
-## What remains before a customer pilot
+## What remains before a customer pilot (SUPERSEDED in part)
 
-Wire and test the intended live seller-intelligence provider if reputation is part of the pilot claim. Review current SDK compatibility against an actual isolated 2-of-3 organization. Capture a real USDC ALLOW and policy BLOCK, including Turnkey records; offline SDK mocks cannot prove service compatibility or root-quorum behavior. Keep customer recovery outside the agent runtime.
+~~Wire and test the intended live seller-intelligence provider if reputation is part of the pilot claim.~~ Done later the same day, see below. Review current SDK compatibility against an actual isolated 2-of-3 organization. Capture a real USDC ALLOW and policy BLOCK, including Turnkey records; offline SDK mocks cannot prove service compatibility or root-quorum behavior. Keep customer recovery outside the agent runtime.
 
 Existing production limitations remain: memory-backed spend accounting, 100-activity polling pages, restricted instruction coverage, and unresolved Token-2022 hook effects. This run did not create a wallet, sign, broadcast, inspect credentials, or revalidate July chain evidence.
 
-RED: the earlier brief implied seller intelligence was active, while inspection and the real-policy test establish the CLI omits its provider. GREEN: the dependency matrix, typechecks, smoke checks and added policy-integration assertions pass; the brief now states the actual boundary. SCOPE: offline compatibility only, no live Turnkey or settlement validation.
+*First-pass summary, superseded by the section below:* RED: the earlier brief implied seller intelligence was active, while inspection and the real-policy test establish the CLI omitted its provider. GREEN: the dependency matrix, typechecks, smoke checks and added policy-integration assertions pass. SCOPE: offline compatibility only, no live Turnkey or settlement validation.
 
 ## Seller intelligence wired (September 17, 2026, later the same day)
 
@@ -94,8 +98,26 @@ twzrd-x402-gate is now pinned at 0.9.9 (was 0.9.3). The bump is deliberate: 0.9.
 
 Logs: `validation/2026-09-17/live-seller-intel-*.log`. The merchant_card wash check returned `wash_flagged: null` with `decision: insufficient_evidence` for all three; null is "not evaluated", never "clean", and the gate does not invent a wash flag from it.
 
+Three refusals do not show that the corpus lacks eligible sellers, so the sweep below looked for allow-graded sellers directly.
+
+### Allow-graded sellers exist: read-only live ALLOW
+
+The 40 Solana merchants with the most unique payers over the last 90 days in the TWZRD corpus were each sent through the free preflight at a $0.05 price. Decisions: 8 allow, 31 block, 1 warn. The 7 Solana sellers listed in the public resource catalog were also swept: 5 warn, 2 block, 0 allow, so the catalog is not where allow-graded sellers are found.
+
+The co-signer's own read-only check was then run against two of the allow-graded sellers:
+
+| Seller | Unique payers, 90d | Amount | Live card | Evaluator | Co-signer vote |
+|---|---|---|---|---|---|
+| J7ZvJEsp… | 205 | $0.05 | allow, score 64.2 (g_allow_strong) | ALLOW | APPROVE |
+| J7ZvJEsp… | 205 | $1.00 | allow, 64.2 | ALLOW | APPROVE |
+| J7ZvJEsp… | 205 | $5.00 | allow, 64.2 | ALLOW | APPROVE |
+| J7ZvJEsp… | 205 | $20.00 | block, cap 10 | INTEL_BLOCK (`twzrd_over_recommended_cap_20_gt_10`) | REJECT |
+| 7uh2ibD1… | 102 | $1.00 | allow, score 72 | ALLOW | APPROVE |
+
+Logs: `validation/2026-09-17/live-seller-intel-J7ZvJEsp*-usd*.log` and `live-seller-intel-7uh2ibD1*-usd1.00.log`. The wash check returned null (not evaluated) for both; the gate never invents a wash flag from null. These are still free HTTP calls: nothing was signed or paid, and the sellers were not contacted.
+
 ### What this means for the pilot
 
-The wired path works end to end and refuses conservatively. It has not yet produced a live ALLOW: none of the probed sellers is graded `allow` by the free corpus. The server upgrades `warn` to `allow` only for sellers with roughly 20 or more unique payers over 90 days, no wash or gone-dark signal and fleet revenue under half. A reputation-based ALLOW in a pilot therefore needs either such a seller or an explicit policy decision to approve `warn` under the card's recommended cap; the co-signer today rejects every `warn` by design and this run did not change that.
+The wired path works end to end: it approves established sellers up to the card's recommended cap (here $10 for the strongest seller) and refuses unknown, `warn`, over-cap and blocked sellers. A funded pilot can therefore pair a live ALLOW against one of these allow-graded sellers with a deterministic refusal (amount cap or unsupported instruction) without changing the `warn` policy. Choosing which seller to actually pay is a business decision, and a real payment additionally needs the current 2-of-3 Turnkey organization exercised live, which nothing in this repository has yet done.
 
-RED: with live intelligence on, payments to unknown or `warn`-graded sellers are refused, so a pilot cannot show an ALLOW against an arbitrary seller. GREEN: provider wired, six mock-API scenarios and the full suite pass on gate 0.9.9, and the live endpoint is reached read-only with the expected refusals. SCOPE: no Turnkey activity, signature or payment was created; the `warn` policy question is left to the operator.
+RED: unknown, `warn`-graded, over-cap and blocked sellers are refused, and the public catalog's Solana sellers are all in that set today. GREEN: provider wired; six mock-API scenarios and the full suite pass on gate 0.9.9; the live endpoint produces a read-only ALLOW for established sellers and a cap refusal above their ceiling. SCOPE: no Turnkey activity, signature or payment was created; live 2-of-3 signing remains unproven.
