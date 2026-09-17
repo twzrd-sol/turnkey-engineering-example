@@ -119,3 +119,11 @@ export type {
   EvaluatedDecision,
   EvaluateOptions,
 } from "./types.js";
+export {
+  createSellerIntelligence,
+  describeSellerIntel,
+  parseSellerIntelMode,
+  type SellerIntelMode,
+  type SellerIntelObservation,
+  type SellerIntelligenceOptions,
+} from "./intelligence.js";

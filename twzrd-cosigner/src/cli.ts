@@ -16,6 +16,11 @@ import {
   DEFAULT_MAX_PRIORITY_FEE_LAMPORTS,
   type EvaluatePaymentFn,
 } from "./decide.js";
+import {
+  createSellerIntelligence,
+  describeSellerIntel,
+  parseSellerIntelMode,
+} from "./intelligence.js";
 import { attestTurnkeyGuard } from "./quorum.js";
 import { createMandateServer } from "./mandate-server.js";
 import { FileMandateStore } from "./mandate-store.js";
@@ -153,8 +158,22 @@ export async function runWorker(): Promise<void> {
   const ledger = createMemorySpendLedger();
   const maxAmountUsd = process.env.TWZRD_MAX_AMOUNT_USD?.trim() || "50";
   const policy: SpendPolicy = { maxAmountUsd, refuseWashFlagged: true };
+  const intelMode = parseSellerIntelMode(process.env.TWZRD_SELLER_INTEL);
+  const intelligence = createSellerIntelligence({
+    mode: intelMode,
+    onObservation: (o) => {
+      console.error(
+        `[twzrd-cosigner] seller-intel ${o.decisionId} payTo=${o.payTo} usd=${o.amountUsd} -> ${o.approved ? "approved" : "refused"} verdict=${o.verdict} score=${o.score ?? "null"} wash=${o.washFlagged ?? "null"} ${o.reason}`,
+      );
+    },
+  });
   const evaluate: EvaluatePaymentFn = async (intent) => {
-    const decision = await evaluateIntent(intent, { signer, ledger, policy });
+    const decision = await evaluateIntent(intent, {
+      signer,
+      ledger,
+      policy,
+      ...(intelligence ? { intelligence } : {}),
+    });
     return { decision: decision.decision, reasonCodes: decision.reasonCodes };
   };
 
@@ -187,6 +206,7 @@ export async function runWorker(): Promise<void> {
   console.error(
     `[twzrd-cosigner] live voter + mandate intake started on ${host}:${port}; non-stable assets fail closed without a programmatic usdRate`,
   );
+  console.error(`[twzrd-cosigner] ${describeSellerIntel(intelMode)}`);
   try {
     await runCosignerWorker({
       approver,

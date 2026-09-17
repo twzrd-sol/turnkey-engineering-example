@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-09-17T21:13:42.047Z",
+  "mode": "seller intelligence LIVE via https://intel.twzrd.xyz (fail-closed; unknown sellers refused)",
+  "intent": {
+    "payTo": "DB2s5PeotN1zwb9WpLQMAYqdHnf86SfjYUhbe1Nm8D1e",
+    "amountUsd": "0.20"
+  },
+  "intelligence": {
+    "decisionId": "4c00b8d2-1070-4a7c-942f-5930ef206d71",
+    "payTo": "DB2s5PeotN1zwb9WpLQMAYqdHnf86SfjYUhbe1Nm8D1e",
+    "amountUsd": "0.20",
+    "approved": true,
+    "verdict": "warn",
+    "score": 52,
+    "washFlagged": null,
+    "reason": "twzrd_warn_allowed",
+    "preflightId": 656759
+  },
+  "evaluator": {
+    "decision": "warn",
+    "reasonCodes": [
+      "INTEL_WARN"
+    ]
+  },
+  "cosignerVote": "REJECT_ACTIVITY",
+  "note": "read-only; no Turnkey activity, no signature, no payment"
+}

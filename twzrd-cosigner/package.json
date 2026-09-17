@@ -1,7 +1,7 @@
 {
   "name": "twzrd-cosigner",
   "version": "0.1.0",
-  "description": "Internal Solana payment-policy approval example for a payer-controlled Turnkey 2-of-3 child organization. Offline validation only; seller intelligence requires an explicitly wired provider. Customer hot + recovery can override the guard.",
+  "description": "Internal Solana payment-policy approval example for a payer-controlled Turnkey 2-of-3 child organization. Offline validation only; the worker wires TWZRD seller intelligence (fail-closed) alongside local payment policy. Customer hot + recovery can override the guard.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,12 +26,13 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.check.json",
-    "test": "npm run build && tsx test/decode.test.ts && tsx test/decode-fuzz.test.ts && tsx test/decide.test.ts && tsx test/turnkey.test.ts && tsx test/resolve-owner.test.ts && tsx test/setup-turnkey.test.ts && tsx test/turnkey-approver.test.ts && tsx test/worker.test.ts && tsx test/polling-worker.test.ts && tsx test/cli.test.ts && tsx test/cli-entrypoint.test.ts && tsx test/mandate.test.ts && tsx test/mandate-store.test.ts && tsx test/mandate-server.test.ts && tsx test/receipt.test.ts && tsx test/policy-integration.test.ts",
+    "test": "npm run build && tsx test/decode.test.ts && tsx test/decode-fuzz.test.ts && tsx test/decide.test.ts && tsx test/turnkey.test.ts && tsx test/resolve-owner.test.ts && tsx test/setup-turnkey.test.ts && tsx test/turnkey-approver.test.ts && tsx test/worker.test.ts && tsx test/polling-worker.test.ts && tsx test/cli.test.ts && tsx test/cli-entrypoint.test.ts && tsx test/mandate.test.ts && tsx test/mandate-store.test.ts && tsx test/mandate-server.test.ts && tsx test/receipt.test.ts && tsx test/policy-integration.test.ts && tsx test/seller-intelligence.test.ts",
     "dry-run": "tsx examples/worker-dry-run.ts",
     "setup-print": "tsx examples/setup-turnkey-print.ts",
     "pilot-smoke": "npm run dry-run && TWZRD_PILOT_SMOKE_OFFLINE=1 npm run setup-print",
     "prepack": "tsc",
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "tsc",
+    "live-intel-check": "tsx examples/live-seller-intel.ts"
   },
   "keywords": [
     "twzrd",
@@ -46,7 +47,7 @@
   },
   "dependencies": {
     "@turnkey/sdk-server": "6.1.1",
-    "twzrd-x402-gate": "0.9.3"
+    "twzrd-x402-gate": "0.9.9"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

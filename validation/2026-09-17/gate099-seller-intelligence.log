@@ -1,0 +1,8 @@
+ok  TWZRD_SELLER_INTEL parses live/off and off yields no provider
+ok  seller with evidence and decision=allow is approved: ALLOW
+ok  never-seen seller (free-tier warn) is refused, not signed: INTEL_WARN,TWZRD_POLICY_WARN_REFUSED
+ok  decision=block seller is refused: INTEL_BLOCK
+ok  allow card but merchant_card wash_flagged=true is refused: WASH_FLAGGED,INTEL_BLOCK
+[twzrd-x402-gate] payment BLOCKED: merchant_card unreachable (fail-closed) — http_503. Set TWZRD_FAIL_OPEN=true to allow payments when the gate is down.
+ok  allow card but merchant_card unreachable (503) is refused (gate >= 0.9.9 fail-closed): INTEL_BLOCK
+ok  intelligence service unreachable refuses even with TWZRD_FAIL_OPEN=1: INTEL_BLOCK
